@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Omni-AI & CapCut Studio</title>
+  <title>Smart AI, Media & CapCut Studio</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #090a10; --card: #131520; --primary: #3b82f6; --accent: #10b981;
-      --text: #ffffff; --border: #222638; --code-bg: #0e1017;
+      --bg: #0b0c12; --card: #141622; --primary: #2563eb; --accent: #10b981;
+      --text: #ffffff; --border: #24273d; --code-bg: #0a0b10;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -37,12 +37,19 @@
     .msg.user { align-self: flex-start; background: var(--primary); }
     .msg.ai { align-self: flex-end; background: var(--card); border: 1px solid var(--border); }
     
+    /* כרטיסיית מוזיקה וסרטונים */
+    .media-card {
+      background: #191c2b; border-radius: 10px; padding: 10px; border: 1px solid var(--border); margin: 6px 0;
+    }
+    audio { width: 100%; margin-top: 6px; }
+
+    /* תיבות קוד */
     .code-container {
       background: var(--code-bg); border-radius: 8px; margin: 8px 0; overflow: hidden;
       border: 1px solid #333852; direction: ltr; text-align: left;
     }
     .code-header {
-      background: #181926; padding: 6px 10px; display: flex; justify-content: space-between;
+      background: #161824; padding: 6px 10px; display: flex; justify-content: space-between;
       align-items: center; font-size: 11px; color: #8890b5; border-bottom: 1px solid #26293d;
     }
     .copy-btn {
@@ -70,39 +77,33 @@
       border-radius: 8px; font-weight: bold; cursor: pointer; flex-shrink: 0;
     }
 
-    /* מסך הגדרות */
     .settings-scroll { flex: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px; }
-    .key-card {
-      background: var(--card); padding: 12px; border-radius: 10px; border: 1px solid var(--border);
-    }
+    .key-card { background: var(--card); padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
     .key-card label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #93c5fd; }
     .key-card input { width: 100%; margin-bottom: 4px; }
-    .key-hint { font-size: 11px; color: #888; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <!-- סרגל הטאבים -->
     <div class="tabs">
-      <button class="tab active" onclick="nav('ai')">🤖 צ'אט וקוד</button>
+      <button class="tab active" onclick="nav('ai')">🤖 צ'אט, שירים ותמונות</button>
       <button class="tab" onclick="nav('capcut')">🎬 CapCut עורך</button>
       <button class="tab" onclick="nav('settings')">⚙️ מפתחות AI</button>
     </div>
 
-    <!-- מסך 1: צ'אט, קוד, מדיה -->
+    <!-- מסך 1: צ'אט AI חכם -->
     <div id="ai-screen" class="screen active">
       <div class="chat-box" id="chat">
         <div class="msg ai">
-          👋 שלום! המערכת מחוברת למספר מנועי AI מסונכרנים במקביל.<br>
-          • <b>קוד ושיחה:</b> שאל שאלות או בקש "צור קוד לאפליקציה...".<br>
-          • <b>תמונות:</b> בקש "תמונה של...".<br>
-          • <b>מוזיקה ווידאו:</b> בקש "שיר של...".<br>
-          <i>טיפ: בלשונית ⚙️ תוכל להזין מפתחות AI נוספים להגברת עוצמת המערכת.</i>
+          👋 שלום! המערכת פועלת 24/7.<br>
+          • <b>לשירים ומוזיקה:</b> בקש "שיר של..." ונגן מוזיקה ווידאו יתנגן ישירות כאן!<br>
+          • <b>לתמונות בחינם:</b> כתוב "תמונה של..." ומנוע ה-AI יפיק תמונה מיד ללא תשלום.<br>
+          • <b>לקוד ותכנות:</b> בקש "צור קוד..." ואקודד לך מיד.
         </div>
       </div>
       <div class="input-bar">
-        <input type="text" id="prompt" placeholder="שאל שאלה, בקש קוד, תמונה או שיר..." onkeydown="if(event.key==='Enter') send()">
+        <input type="text" id="prompt" placeholder="בקש שיר, תמונה, קוד או שאלה..." onkeydown="if(event.key==='Enter') send()">
         <button class="btn" onclick="send()">שלח</button>
       </div>
     </div>
@@ -127,80 +128,53 @@
       </div>
     </div>
 
-    <!-- מסך 3: הגדרות מפתחות AI (מסונכרנים ביחד) -->
+    <!-- מסך 3: הגדרות מפתחות AI -->
     <div id="settings-screen" class="screen">
       <div class="settings-scroll">
-        <h3 style="margin-bottom:4px;">🔑 מרכז ניהול מפתחות AI</h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:8px;">הדבק כאן מפתחות. המערכת תסנכרן את כולם ותבצע מעבר גיבוי אוטומטי ביניהם.</p>
+        <h3>🔑 מרכז מפתחות AI</h3>
+        <p style="font-size:12px; color:#aaa;">כל המפתחות שמורים מקומית במכשיר שלך.</p>
         
         <div class="key-card">
-          <label>⚡ Groq API Key (צ'אט וקוד מהיר בחינם)</label>
+          <label>⚡ Groq API Key (שיחה וקוד)</label>
           <input type="password" id="k_groq" placeholder="gsk_...">
-          <div class="key-hint">להוצאת מפתח חינם: console.groq.com</div>
         </div>
-
         <div class="key-card">
-          <label>🌐 Google Gemini API Key (בינה וראיית מכונה)</label>
+          <label>🌐 Google Gemini API Key</label>
           <input type="password" id="k_gemini" placeholder="AIzaSy... או AQ...">
-          <div class="key-hint">להוצאת מפתח חינם: aistudio.google.com</div>
         </div>
-
         <div class="key-card">
-          <label>🔀 OpenRouter API Key (חיבור ל-100+ מודלים)</label>
-          <input type="password" id="k_openrouter" placeholder="sk-or-v1-...">
-          <div class="key-hint">כולל מודלי DeepSeek R1 בחינם: openrouter.ai</div>
-        </div>
-
-        <div class="key-card">
-          <label>🎨 Hugging Face Token (תמונות FLUX ו-SDXL)</label>
+          <label>🎨 Hugging Face Token (לתמונות נוספות)</label>
           <input type="password" id="k_hf" placeholder="hf_...">
-          <div class="key-hint">להוצאת מפתח חינם: huggingface.co/settings/tokens</div>
         </div>
 
-        <div class="key-card">
-          <label>🎬 Fal.ai Key (סרטוני וידאו ומודלי הדור הבא)</label>
-          <input type="password" id="k_fal" placeholder="fal_key_...">
-          <div class="key-hint">הרשמה עם קרדיט ניסיון: fal.ai</div>
-        </div>
-
-        <button class="btn" style="background:var(--accent); width:100%; padding:14px;" onclick="saveKeys()">💾 שמור וסנכרן את כל המפתחות</button>
+        <button class="btn" style="background:var(--accent); width:100%; padding:14px;" onclick="saveKeys()">💾 שמור מפתחות</button>
       </div>
     </div>
-
   </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
 
-    // טעינת מפתחות שמורים מ-localStorage עם גיבוי ברירת מחדל
     let KEYS = {
       groq: localStorage.getItem('k_groq') || "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",
       gemini: localStorage.getItem('k_gemini') || "",
-      openrouter: localStorage.getItem('k_openrouter') || "",
-      hf: localStorage.getItem('k_hf') || "",
-      fal: localStorage.getItem('k_fal') || ""
+      hf: localStorage.getItem('k_hf') || ""
     };
 
     function loadKeysToInputs() {
       document.getElementById('k_groq').value = KEYS.groq;
       document.getElementById('k_gemini').value = KEYS.gemini;
-      document.getElementById('k_openrouter').value = KEYS.openrouter;
       document.getElementById('k_hf').value = KEYS.hf;
-      document.getElementById('k_fal').value = KEYS.fal;
     }
 
     function saveKeys() {
       KEYS.groq = document.getElementById('k_groq').value.trim();
       KEYS.gemini = document.getElementById('k_gemini').value.trim();
-      KEYS.openrouter = document.getElementById('k_openrouter').value.trim();
       KEYS.hf = document.getElementById('k_hf').value.trim();
-      KEYS.fal = document.getElementById('k_fal').value.trim();
 
-      for (let k in KEYS) {
-        localStorage.setItem('k_' + k, KEYS[k]);
-      }
-      alert('✅ כל מפתחות ה-AI נשמרו וסונכרנו בהצלחה במכשיר שלך!');
+      for (let k in KEYS) localStorage.setItem('k_' + k, KEYS[k]);
+      alert('✅ המפתחות נשמרו בהצלחה!');
       nav('ai');
     }
 
@@ -214,71 +188,55 @@
 
     let history = [];
 
-    // מנוע AI מסונכרן רב-שכבתי (Multi-Engine LLM Fallback)
-    async function queryMultiEngineChat(messages) {
-      // 1. ניסיון ב-Groq
-      if (KEYS.groq) {
-        try {
-          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${KEYS.groq}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "openai/gpt-oss-20b", messages })
-          });
-          const d = await res.json();
-          if (d.choices && d.choices[0]) return d.choices[0].message.content;
-        } catch(e) { console.log("Groq fallback..."); }
-      }
+    // מנוע נגינת מוזיקה ושירים ללא שום חסימות זכויות יוצרים
+    async function playSongInChat(query) {
+      try {
+        // פנייה ל-iTunes API החופשי והרשמי (תומך ב-CORS מלא!)
+        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
+        const res = await fetch(itunesUrl);
+        const data = await res.json();
 
-      // 2. ניסיון ב-Gemini
-      if (KEYS.gemini) {
-        try {
-          const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-          const promptText = messages.map(m => `${m.role}: ${m.content}`).join("\n");
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "x-goog-api-key": KEYS.gemini, "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-          });
-          const d = await res.json();
-          if (d.candidates && d.candidates[0]) return d.candidates[0].content.parts[0].text;
-        } catch(e) { console.log("Gemini fallback..."); }
-      }
+        if (data.results && data.results.length > 0) {
+          const track = data.results[0];
+          const art = track.artworkUrl100.replace('100x100bb', '400x400bb');
+          const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(track.artistName + " " + track.trackName)}`;
 
-      // 3. ניסיון ב-OpenRouter (מודל חינמי פתוח)
-      if (KEYS.openrouter) {
-        try {
-          const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${KEYS.openrouter}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "meta-llama/llama-3.3-70b-instruct:free", messages })
-          });
-          const d = await res.json();
-          if (d.choices && d.choices[0]) return d.choices[0].message.content;
-        } catch(e) { console.log("OpenRouter fallback..."); }
-      }
+          return `
+            <div class="media-card">
+              <div style="display:flex; gap:10px; align-items:center;">
+                <img src="${art}" style="width:70px; height:70px; border-radius:8px; object-fit:cover;">
+                <div>
+                  <div style="font-weight:bold; font-size:15px;">${track.trackName}</div>
+                  <div style="font-size:13px; color:#aaa;">${track.artistName}</div>
+                </div>
+              </div>
+              <div style="font-size:12px; margin-top:8px; color:#10b981; font-weight:bold;">▶️ נגן שמע פעיל ישירות כאן:</div>
+              <audio controls autoplay src="${track.previewUrl}"></audio>
+              <a href="${ytSearch}" target="_blank" class="action-btn" style="background:#ef4444;">🎬 צפה בקליפ המלא ב-YouTube</a>
+            </div>
+          `;
+        }
+      } catch (e) {}
 
-      throw new Error("כל מנועי ה-AI אינם זמינים כרגע. אנא הזן מפתחות נוספים בלשונית הגדרות.");
+      // גיבוי לחיפוש יוטיוב ישיר
+      const directYt = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+      return `
+        <div class="media-card">
+          <div style="font-weight:bold; font-size:14px; margin-bottom:6px;">🎬 תוצאות עבור: "${query}"</div>
+          <a href="${directYt}" target="_blank" class="action-btn">▶️ לחץ כאן להאזנה וצפייה ב-YouTube</a>
+        </div>
+      `;
     }
 
-    // מנוע תמונות מסונכרן (Multi-Engine Image Fallback)
-    async function queryMultiEngineImage(promptText) {
-      // תרגום קצר לאנגלית
-      let eng = promptText;
-      try {
-        eng = await queryMultiEngineChat([
-          { role: "system", content: "Translate to 3 concise English visual description words only." },
-          { role: "user", content: promptText }
-        ]);
-        eng = eng.replace(/["']/g, '').trim();
-      } catch(e) {}
-
-      // 1. ניסיון עם Hugging Face (אם הוזן מפתח)
+    // מנוע תמונות 100% חינם ללא הרשמה וללא Puter
+    async function getDirectAiImage(prompt) {
+      // ניסיון ראשון דרך Hugging Face אם הוזן מפתח
       if (KEYS.hf) {
         try {
           const res = await fetch("https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell", {
             method: "POST",
             headers: { "Authorization": `Bearer ${KEYS.hf}` },
-            body: JSON.stringify({ inputs: eng })
+            body: JSON.stringify({ inputs: prompt })
           });
           if (res.ok) {
             const blob = await res.blob();
@@ -287,17 +245,8 @@
         } catch(e) {}
       }
 
-      // 2. מנוע Lexica 4K חינם
-      try {
-        const res = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(eng)}`);
-        if (res.ok) {
-          const d = await res.json();
-          if (d.images && d.images.length > 0) return d.images[0].src;
-        }
-      } catch(e) {}
-
-      // 3. גיבוי ישיר
-      return `https://image.pollinations.ai/prompt/${encodeURIComponent(eng)}?width=512&height=512&model=turbo&nologo=true&seed=${Date.now()}`;
+      // מנוע פתוח ויציב
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&model=turbo&nologo=true&nofeed=true&seed=${Date.now()}`;
     }
 
     function formatAiResponse(raw) {
@@ -334,52 +283,64 @@
       input.value = "";
       history.push({ role: 'user', content: text });
 
-      // 1. יוטיוב (אם המשתמש לא שאל שאלה על קוד)
-      if (/שיר|יוטיוב|youtube/i.test(text) && !/קוד|אפליקציה|תכנת|פייתון/i.test(text)) {
-        const clean = text.replace(/שיר של|שיר|יוטיוב/g, '').trim() || text;
-        append('ai', `🎬 מחלץ נגן ישיר עבור <b>${clean}</b>...`);
-        try {
-          const pUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.youtube.com/results?search_query=" + clean);
-          const r = await fetch(pUrl, { signal: AbortSignal.timeout(4000) });
-          const html = await r.text();
-          const match = html.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
-          const box = document.getElementById('chat');
-          box.removeChild(box.lastChild);
-          if (match && match[1]) {
-            append('ai', `
-              🎬 <b>תוצאה עבור: ${clean}</b><br>
-              <div style="margin:8px 0;border-radius:10px;overflow:hidden;background:#000;">
-                <iframe width="100%" height="210" src="https://www.youtube.com/embed/${match[1]}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;display:block;"></iframe>
-              </div>
-              <a href="https://www.youtube.com/watch?v=${match[1]}" target="_blank" class="action-btn">🔗 פתח באפליקציית YouTube</a>
-            `);
-            return;
-          }
-        } catch(e) {}
-      }
-
-      // 2. תמונות
-      if (/(תמונה|תמונות|ציור|איור|צייר|תצייר)/i.test(text) && !/קוד|אפליקציה/i.test(text)) {
-        append('ai', '🎨 מפיק תמונה במנוע ה-AI המשולב...');
-        const clean = text.replace(/צייר לי|צייר|תמונה של|תמונה/g, '').trim() || 'futuristic city 4k';
-        const imgUrl = await queryMultiEngineImage(clean);
+      // 1. זיהוי שירים וסרטונים - לעולם לא שולח ל-AI כדי למנוע הודעת סירוב זכויות יוצרים!
+      if (/שיר|שירים|מוזיקה|סרטון|יוטיוב|youtube|song|music/i.test(text) && !/קוד|אפליקציה|תכנת|פייתון/i.test(text)) {
+        append('ai', '🎵 מאתר שיר ונגן פעיל...');
+        const clean = text.replace(/שיר של|שיר|סרטון של|סרטון|יוטיוב|מוזיקה/g, '').trim() || text;
+        const mediaHtml = await playSongInChat(clean);
+        
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
+        append('ai', mediaHtml);
+        return; // סיום מוחלט כדי למנוע זליגה ל-Groq!
+      }
+
+      // 2. זיהוי תמונות
+      if (/(תמונה|תמונות|ציור|איור|צייר|תצייר)/i.test(text) && !/קוד|אפליקציה/i.test(text)) {
+        append('ai', '🎨 מפיק תמונה ב-AI ללא שום עלות...');
+        const clean = text.replace(/צייר לי|צייר|תמונה של|תמונה/g, '').trim() || 'futuristic city 4k';
+        
+        // תרגום פנימי מהיר
+        let eng = clean;
+        try {
+          const tRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${KEYS.groq}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "openai/gpt-oss-20b", messages: [{ role: "system", content: "Translate to 3 English visual words only." }, { role: "user", content: clean }] })
+          });
+          const tData = await tRes.json();
+          eng = tData.choices[0].message.content.trim().replace(/["']/g, '');
+        } catch(e) {}
+
+        const imgUrl = await getDirectAiImage(eng);
+        const box = document.getElementById('chat');
+        box.removeChild(box.lastChild);
+
         append('ai', `
           🎨 <b>התמונה הופקה בהצלחה:</b><br><i>"${clean}"</i><br>
           <div style="margin:8px 0;"><img src="${imgUrl}" style="width:100%;border-radius:10px;min-height:200px;background:#181822;display:block;" loading="lazy"></div>
-          <a href="${imgUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה</a>
+          <a href="${imgUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה להורדה</a>
         `);
         return;
       }
 
-      // 3. שיחת AI וכתיבת קוד
+      // 3. שיחת AI רגילה וכתיבת קוד
       append('ai', '⏳ כותב מענה...');
       try {
-        const reply = await queryMultiEngineChat([
-          { role: "system", content: "אתה מפתח תוכנה ומומחה AI. כשמבקשים ממך קוד, כתוב קוד מלא, איכותי, מוכן להרצה, בתוך בלוקי קוד של markdown. ענה תמיד בעברית טבעית וברורה." },
-          ...history.slice(-6)
-        ]);
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${KEYS.groq}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-20b",
+            messages: [
+              { role: "system", content: "אתה עוזר וירטואלי חכם ומתכנת מקצועי. כשמבקשים ממך קוד, כתוב קוד מלא בתוך בלוקי markdown. ענה תמיד בעברית ברורה ומסייעת." },
+              ...history.slice(-6)
+            ]
+          })
+        });
+        const data = await res.json();
+        const reply = data.choices[0].message.content;
+
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
         append('ai', formatAiResponse(reply));
@@ -387,7 +348,7 @@
       } catch (err) {
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
-        append('ai', `❌ ${err.message}`);
+        append('ai', '❌ שגיאה בקבלת תשובה. נסה שוב בעוד רגע.');
       }
     }
 
@@ -400,7 +361,7 @@
       b.scrollTop = b.scrollHeight;
     }
 
-    // CapCut פשוט
+    // לוגיקת סטודיו CapCut
     const v = document.getElementById('editorVideo');
     function loadMedia(input) {
       const f = input.files[0];
