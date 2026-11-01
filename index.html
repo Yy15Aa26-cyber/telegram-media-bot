@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Smart AI & CapCut Studio</title>
+  <title>Smart AI, Coder & CapCut Studio</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
       --bg: #0c0d14; --card: #151724; --primary: #3b82f6; --accent: #10b981;
-      --text: #ffffff; --border: #26293d; --timeline: #1e2133;
+      --text: #ffffff; --border: #26293d; --code-bg: #11121a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -28,16 +28,33 @@
     .screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
     .screen.active { display: flex; }
     
-    /* צ'אט */
     .chat-box {
       flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px;
     }
     .msg {
-      max-width: 90%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4;
+      max-width: 92%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5;
     }
     .msg.user { align-self: flex-start; background: var(--primary); }
     .msg.ai { align-self: flex-end; background: var(--card); border: 1px solid var(--border); }
     
+    /* עיצוב תיבות קוד כמו ב-ChatGPT */
+    .code-container {
+      background: var(--code-bg); border-radius: 8px; margin: 8px 0; overflow: hidden;
+      border: 1px solid #333852; direction: ltr; text-align: left;
+    }
+    .code-header {
+      background: #181926; padding: 6px 10px; display: flex; justify-content: space-between;
+      align-items: center; font-size: 11px; color: #8890b5; border-bottom: 1px solid #26293d;
+    }
+    .copy-btn {
+      background: #2b2f48; border: none; color: #fff; padding: 3px 8px; border-radius: 4px;
+      cursor: pointer; font-size: 11px; font-weight: bold;
+    }
+    pre.code-block {
+      margin: 0; padding: 10px; overflow-x: auto; font-family: "Courier New", Courier, monospace;
+      font-size: 13px; color: #4ade80; line-height: 1.4; white-space: pre-wrap; word-break: break-all;
+    }
+
     .action-btn {
       display: block; text-align: center; background: var(--primary); color: #fff !important;
       padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 8px; cursor: pointer;
@@ -54,16 +71,16 @@
       border-radius: 8px; font-weight: bold; cursor: pointer; flex-shrink: 0;
     }
 
-    /* סטודיו CapCut Timeline */
+    /* סטודיו CapCut */
     .studio-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .preview-box {
       position: relative; width: 100%; border-radius: 10px; overflow: hidden;
-      background: #000; border: 1px solid var(--border); aspect-ratio: 16/9; max-height: 230px;
+      background: #000; border: 1px solid var(--border); aspect-ratio: 16/9; max-height: 220px;
     }
     canvas#mainCanvas { width: 100%; height: 100%; display: block; object-fit: contain; }
     
     .timeline-wrap {
-      background: var(--timeline); border-radius: 10px; padding: 10px; border: 1px solid var(--border);
+      background: #191c2b; border-radius: 10px; padding: 10px; border: 1px solid var(--border);
     }
     .timeline-track {
       background: #131522; border-radius: 6px; padding: 8px; margin-bottom: 6px;
@@ -71,7 +88,6 @@
     }
     .track-audio { border-left-color: #ec4899; }
     .track-text { border-left-color: #f59e0b; }
-    .track-fx { border-left-color: #10b981; }
 
     .tool-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 4px;
@@ -90,45 +106,43 @@
 <body>
 
   <div class="app-container">
-    <!-- סרגל מעבר טאבים -->
+    <!-- סרגל הטאבים -->
     <div class="tabs">
-      <button class="tab active" onclick="nav('ai')">🤖 צ'אט, סרטונים ותמונות</button>
-      <button class="tab" onclick="nav('studio')">🎬 סטודיו CapCut מתקדם</button>
+      <button class="tab active" onclick="nav('ai')">🤖 צ'אט, קוד ותמונות</button>
+      <button class="tab" onclick="nav('studio')">🎬 סטודיו CapCut & MP3</button>
     </div>
 
-    <!-- מסך 1: צ'אט + נגן YouTube ישיר + מחולל תמונות חינמי -->
+    <!-- מסך 1: צ'אט AI חכם + כתיבת קוד + יוטיוב ותמונות -->
     <div id="ai-screen" class="screen active">
       <div class="chat-box" id="chat">
         <div class="msg ai">
           👋 שלום! המערכת פועלת 24/7.<br>
-          • <b>לשירים וסרטונים:</b> כתוב "שיר של..." ונגן YouTube יתנגן ישירות כאן בתוך הצ'אט!<br>
-          • <b>לתמונות AI:</b> כתוב "תמונה של..." ומנוע ה-AI יפיק תמונת 4K ללא שום תשלום!
+          • <b>לכתיבת קוד ופיתוח:</b> בקש "כתוב לי קוד...", "צור אפליקציה..." ואקודד לך מיד!<br>
+          • <b>לשירים וסרטונים:</b> בקש "שיר של..." ונגן YouTube יתנגן ישירות כאן!<br>
+          • <b>לתמונות בחינם:</b> כתוב "תמונה של..." ומנוע ה-AI יפיק תמונה.
         </div>
       </div>
       <div class="input-bar">
-        <input type="text" id="prompt" placeholder="שאל שאלה, בקש תמונה או שיר ביוטיוב..." onkeydown="if(event.key==='Enter') send()">
+        <input type="text" id="prompt" placeholder="בקש קוד, תמונה, שיר או שאלה..." onkeydown="if(event.key==='Enter') send()">
         <button class="btn" onclick="send()">שלח</button>
       </div>
     </div>
 
-    <!-- מסך 2: סטודיו CapCut מלא -->
+    <!-- מסך 2: סטודיו CapCut -->
     <div id="studio-screen" class="screen">
       <div class="studio-container">
         
-        <!-- חלון התצוגה המרכזי (Canvas) -->
         <div class="preview-box">
           <canvas id="mainCanvas" width="640" height="360"></canvas>
           <video id="sourceVideo" playsinline style="display:none;"></video>
         </div>
 
-        <!-- פקדי ניגון מהירים -->
         <div style="display:flex; gap:6px; align-items:center;">
           <button class="btn" id="playBtn" style="flex:1; padding:8px;" onclick="togglePlay()">▶️ נגן תצוגה</button>
           <input type="range" id="timeSlider" min="0" max="100" value="0" style="flex:2;" oninput="scrubVideo(this.value)">
           <span id="timeDisplay" style="font-size:11px; font-family:monospace; min-width:45px;">00:00</span>
         </div>
 
-        <!-- ציר זמנים רב-שכבתי (Multi-Layer Timeline) -->
         <div class="timeline-wrap">
           <div style="font-size:12px; font-weight:bold; margin-bottom:6px; color:#aaa;">🎞️ ציר זמנים רב-שכבתי (Timeline Tracks):</div>
           
@@ -146,14 +160,11 @@
 
           <div class="timeline-track track-text">
             <span>✍️ שכבת כתוביות (Captions)</span>
-            <button class="pill-btn" onclick="addCaptionLayer()">+ ערוך כתובית</button>
+            <button class="pill-btn" onclick="document.getElementById('capInput').focus()">+ ערוך כתובית</button>
           </div>
         </div>
 
-        <!-- כלי AI Magic ועיבוד מתקדם -->
         <div class="tool-grid">
-          
-          <!-- כלי 1: כתוביות חכמות בסגנון CapCut -->
           <div class="tool-card">
             <label>✍️ כתוביות TikTok / CapCut</label>
             <input type="text" id="capInput" placeholder="הקלד כתובית..." style="width:100%; padding:6px; border-radius:4px; background:#111; color:#fff; border:1px solid #444;" oninput="renderOverlay()">
@@ -164,18 +175,16 @@
             </div>
           </div>
 
-          <!-- כלי 2: בקרת מהירות (Speed Ramping) -->
           <div class="tool-card">
             <label>⚡ מהירות (Speed Ramping)</label>
             <div style="display:flex; gap:3px; flex-wrap:wrap;">
-              <button class="pill-btn" onclick="changeSpeed(0.5, this)">0.5x סלואו</button>
-              <button class="pill-btn active" onclick="changeSpeed(1.0, this)">1.0x רגיל</button>
-              <button class="pill-btn" onclick="changeSpeed(1.5, this)">1.5x מהיר</button>
+              <button class="pill-btn" onclick="changeSpeed(0.5, this)">0.5x</button>
+              <button class="pill-btn active" onclick="changeSpeed(1.0, this)">1.0x</button>
+              <button class="pill-btn" onclick="changeSpeed(1.5, this)">1.5x</button>
               <button class="pill-btn" onclick="changeSpeed(2.0, this)">2.0x</button>
             </div>
           </div>
 
-          <!-- כלי 3: פילטרים קולנועיים -->
           <div class="tool-card">
             <label>🎨 פילטר קולנועי</label>
             <select id="filterSelect" style="width:100%; padding:6px; border-radius:4px; background:#111; color:#fff; border:1px solid #444;" onchange="applyFilter(this.value)">
@@ -183,21 +192,15 @@
               <option value="contrast(160%) saturate(140%)">קולנועי עמוק</option>
               <option value="grayscale(100%)">שחור-לבן Noir</option>
               <option value="sepia(90%)">וינטג' רטרו</option>
-              <option value="hue-rotate(90deg)">סייברפאנק</option>
             </select>
           </div>
 
-          <!-- כלי 4: ניקוי רעשים והגברת ווליום (Voice Clear) -->
           <div class="tool-card">
-            <label>🔊 שיפור סאונד וניקוי רעש</label>
-            <button class="pill-btn" id="voiceEnhanceBtn" style="width:100%; margin-top:2px;" onclick="toggleVoiceEnhance()">🎙️ הפעל שיפור צלילות דיבור</button>
-            <button class="pill-btn" style="width:100%; margin-top:4px;" onclick="extractAudioOnly()">🎵 חלץ ל-MP3 נקי</button>
+            <label>🔊 שמע וייצוא</label>
+            <button class="pill-btn" style="width:100%; margin-top:2px;" onclick="extractAudioOnly()">🎵 חלץ ל-MP3 נקי</button>
+            <button class="pill-btn" style="width:100%; margin-top:4px; background:#10b981;" onclick="exportEditedVideo()">💾 שמור סרטון</button>
           </div>
-
         </div>
-
-        <!-- כפתור ייצוא מלא -->
-        <button class="btn" style="width:100%; background:var(--accent); padding:14px; margin-bottom:12px;" onclick="exportEditedVideo()">💾 ייצא סרטון ערוך (Export Video)</button>
 
       </div>
     </div>
@@ -216,32 +219,36 @@
       document.getElementById('studio-screen').classList.toggle('active', tab==='studio');
     }
 
-    // שליפת מזהה וידאו אמיתי של יוטיוב באמצעות סריקה חיה (עובד ללא שגיאת 150)
-    async function getDirectYouTubeVideoId(query) {
-      try {
-        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.youtube.com/results?search_query=" + query);
-        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(4000) });
-        if (res.ok) {
-          const html = await res.text();
-          const match = html.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
-          if (match && match[1]) return match[1];
-        }
-      } catch (e) {}
-      return null;
+    // פונקציה חכמה להמרת קוד לתיבות מעוצבות בסגנון ChatGPT
+    function formatAiResponse(raw) {
+      // טיפול בבלוקי קוד ```lang ... ```
+      let res = raw.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+        const id = 'code_' + Math.random().toString(36).substr(2, 8);
+        const safe = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `
+          <div class="code-container">
+            <div class="code-header">
+              <span>${lang || 'CODE'}</span>
+              <button class="copy-btn" onclick="copyCodeBlock('${id}', this)">📋 העתק קוד</button>
+            </div>
+            <pre class="code-block"><code id="${id}">${safe}</code></pre>
+          </div>
+        `;
+      });
+
+      // טיפול בקוד בשורה בודדת `code`
+      res = res.replace(/`([^`]+)`/g, '<code style="background:#202334;padding:2px 5px;border-radius:4px;color:#38bdf8;font-family:monospace;">$1</code>');
+      
+      // המרת שורות חדשות
+      res = res.replace(/\n/g, '<br>');
+      return res;
     }
 
-    // יצירת תמונת AI דרך Lexica – 100% חינם, ללא Puter וללא בקשת תשלום!
-    async function fetchAiPhoto(prompt) {
-      try {
-        const res = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(prompt)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.images && data.images.length > 0) {
-            return data.images[0].src;
-          }
-        }
-      } catch (e) {}
-      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&model=turbo&nologo=true&seed=${Date.now()}`;
+    function copyCodeBlock(id, btn) {
+      const code = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(code);
+      btn.innerText = "✅ הועתק!";
+      setTimeout(() => btn.innerText = "📋 העתק קוד", 2000);
     }
 
     async function send() {
@@ -253,66 +260,71 @@
       input.value = "";
       history.push({ role: 'user', content: text });
 
-      // 1. נגן יוטיוב ישיר בתוך הצ'אט
-      if (/שיר|סרט|סרטון|יוטיוב|youtube/i.test(text)) {
-        const clean = text.replace(/שיר של|שיר|סרטון של|סרטון|יוטיוב/g, '').trim() || text;
-        append('ai', `🎬 מחלץ נגן ישיר עבור <b>${clean}</b>...`);
+      // 1. חיפוש יוטיוב (רק אם לא מדובר בבקשת קוד!)
+      if (/שיר|יוטיוב|youtube/i.test(text) && !/קוד|אפליקציה|תכנת|פייתון|html|script/i.test(text)) {
+        const clean = text.replace(/שיר של|שיר|יוטיוב/g, '').trim() || text;
+        append('ai', `🎬 מחפש נגן עבור <b>${clean}</b>...`);
 
-        const videoId = await getDirectYouTubeVideoId(clean);
-        const box = document.getElementById('chat');
-        box.removeChild(box.lastChild);
+        try {
+          const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.youtube.com/results?search_query=" + clean);
+          const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(4000) });
+          const html = await res.text();
+          const match = html.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
+          
+          const box = document.getElementById('chat');
+          box.removeChild(box.lastChild);
 
-        if (videoId) {
-          append('ai', `
-            🎬 <b>סרטון/שיר מוכן לצפייה ישירה:</b><br>
-            <div style="margin:8px 0;border-radius:10px;overflow:hidden;background:#000;">
-              <iframe width="100%" height="210" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;display:block;"></iframe>
-            </div>
-            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="action-btn">🔗 פתח באפליקציית YouTube</a>
-          `);
-        } else {
-          append('ai', `
-            🎬 הנה קישור ישיר לחיפוש עבור "${clean}":<br>
-            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(clean)}" target="_blank" class="action-btn">▶️ צפה ישירות ב-YouTube</a>
-          `);
-        }
-        return;
+          if (match && match[1]) {
+            append('ai', `
+              🎬 <b>תוצאה עבור: ${clean}</b><br>
+              <div style="margin:8px 0;border-radius:10px;overflow:hidden;background:#000;">
+                <iframe width="100%" height="210" src="https://www.youtube.com/embed/${match[1]}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;display:block;"></iframe>
+              </div>
+              <a href="https://www.youtube.com/watch?v=${match[1]}" target="_blank" class="action-btn">🔗 פתח ב-YouTube</a>
+            `);
+            return;
+          }
+        } catch(e) {}
       }
 
-      // 2. תמונות AI חינמיות (ללא Puter, ללא תשלום)
-      if (/תמונה|תמונות|צייר|ציור|תצייר|צור|תיצור|draw|image|photo/i.test(text)) {
-        append('ai', '🎨 מפיק תמונה ב-AI ללא שום עלות...');
-        const clean = text.replace(/צייר לי|צייר|תמונה של|תמונה|צור|תיצור/g, '').trim() || 'scenery 4k';
+      // 2. יצירת תמונות AI (רק אם מבקשים בפירוש תמונה/ציור, ולא קוד!)
+      const isImage = /(תמונה|תמונות|ציור|ציורים|איור|צייר|תצייר)/i.test(text) && !/קוד|אפליקציה|תכנת/i.test(text);
+      if (isImage) {
+        append('ai', '🎨 מפיק תמונה ב-AI בחינם...');
+        const clean = text.replace(/צייר לי|צייר|תמונה של|תמונה/g, '').trim() || 'scenery 4k';
 
-        // תרגום קצר לאנגלית
         let eng = clean;
         try {
           const tRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "openai/gpt-oss-20b", messages: [{ role: "system", content: "Translate to 3 English visual words only." }, { role: "user", content: clean }] })
+            body: JSON.stringify({ model: "openai/gpt-oss-20b", messages: [{ role: "system", content: "Translate to 3 visual English words only." }, { role: "user", content: clean }] })
           });
           const tData = await tRes.json();
           eng = tData.choices[0].message.content.trim().replace(/["']/g, '');
         } catch(e) {}
 
-        const photoUrl = await fetchAiPhoto(eng);
+        let photoUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(eng)}?width=512&height=512&model=turbo&nologo=true&seed=${Date.now()}`;
+        try {
+          const lRes = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(eng)}`);
+          if (lRes.ok) {
+            const lData = await lRes.json();
+            if (lData.images && lData.images.length > 0) photoUrl = lData.images[0].src;
+          }
+        } catch(e) {}
+
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
-
         append('ai', `
-          🎨 <b>התמונה הופקה בהצלחה (חינם 100%):</b><br>
-          <i>"${clean}"</i><br>
-          <div style="margin:8px 0;">
-            <img src="${photoUrl}" style="width:100%;border-radius:10px;min-height:200px;background:#181822;display:block;" loading="lazy">
-          </div>
-          <a href="${photoUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה להורדה</a>
+          🎨 <b>התמונה הופקה בהצלחה:</b><br><i>"${clean}"</i><br>
+          <div style="margin:8px 0;"><img src="${photoUrl}" style="width:100%;border-radius:10px;min-height:200px;background:#181822;display:block;" loading="lazy"></div>
+          <a href="${photoUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה</a>
         `);
         return;
       }
 
-      // 3. שיחת AI רגילה
-      append('ai', '⏳ חושב...');
+      // 3. שיחת AI רגילה וכתיבת קוד מלאה מול Groq!
+      append('ai', '⏳ כותב מענה...');
       try {
         const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -320,7 +332,7 @@
           body: JSON.stringify({
             model: "openai/gpt-oss-20b",
             messages: [
-              { role: "system", content: "אתה בוט מסייע וחכם. המערכת שלך כוללת עורך וידאו CapCut מתקדם, נגן YouTube ויצירת תמונות AI. לעולם אל תגיד 'איני יכול ליצור תמונות או סרטונים'. ענה תמיד בעברית טבעית ונעימה." },
+              { role: "system", content: "אתה מפתח תוכנה ומתכנת מקצועי. כשמבקשים ממך קוד, כתוב קוד מלא, מפורט, מוכן להרצה, ועטוף אותו תמיד בבלוקי קוד של markdown כמו ```html או ```python. הסבר תמיד בעברית ברורה ומקצועית." },
               ...history.slice(-6)
             ]
           })
@@ -330,12 +342,14 @@
 
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
-        append('ai', reply);
+        
+        // הדפסה מעוצבת של הקוד!
+        append('ai', formatAiResponse(reply));
         history.push({ role: 'assistant', content: reply });
-      } catch {
+      } catch (err) {
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
-        append('ai', '❌ שגיאה בחיבור ל-AI.');
+        append('ai', '❌ שגיאה בקבלת תשובה. נסה שוב בעוד רגע.');
       }
     }
 
@@ -348,7 +362,7 @@
       b.scrollTop = b.scrollHeight;
     }
 
-    // --- מנוע CapCut Studio (מולטי-טראק ורינדור מקומי) ---
+    // --- לוגיקת סטודיו CapCut ---
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
     const vid = document.getElementById('sourceVideo');
@@ -403,20 +417,16 @@
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
       ctx.filter = "none";
 
-      // ציור שכבת כתוביות חכמה בסגנון CapCut
       if (captionText) {
         ctx.font = `bold ${Math.round(canvas.height * 0.08)}px sans-serif`;
         ctx.textAlign = "center";
-        
         const x = canvas.width / 2;
         const y = canvas.height * 0.85;
 
-        // רקע כהה לכתובית
         const textMetrics = ctx.measureText(captionText);
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.fillRect(x - textMetrics.width / 2 - 10, y - Math.round(canvas.height * 0.08), textMetrics.width + 20, Math.round(canvas.height * 0.1));
 
-        // טקסט הכתובית
         ctx.fillStyle = captionColor;
         ctx.fillText(captionText, x, y - 5);
       }
@@ -460,19 +470,6 @@
       drawFrame();
     }
 
-    function addCaptionLayer() {
-      document.getElementById('capInput').focus();
-    }
-
-    let isEnhanced = false;
-    function toggleVoiceEnhance() {
-      isEnhanced = !isEnhanced;
-      const btn = document.getElementById('voiceEnhanceBtn');
-      btn.classList.toggle('active', isEnhanced);
-      btn.innerText = isEnhanced ? "✅ שיפור צלילות פעיל" : "🎙️ הפעל שיפור צלילות דיבור";
-      alert(isEnhanced ? "פילטר ניקוי רעשים הופעל על שכבת השמע!" : "פילטר הושבת");
-    }
-
     function extractAudioOnly() {
       if (!vid.src) return alert('טען סרטון קודם');
       const a = document.createElement('a');
@@ -481,23 +478,23 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
-      alert('השמע חולץ ונשמר בהצלחה!');
+      alert('השמע חולץ ונשמר למכשיר!');
     }
 
     function exportEditedVideo() {
       if (!loadedVideoFile) return alert('טען סרטון לעריכה');
-      alert('מייצא את הסרטון הערוך עם כל השכבות והפילטרים למכשיר...');
       const a = document.createElement('a');
       a.href = vid.src;
-      a.download = 'capcut_project_' + loadedVideoFile.name;
+      a.download = 'capcut_edit_' + loadedVideoFile.name;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      alert('הקובץ הורד למכשיר בהצלחה!');
     }
 
     function selectButton(clicked) {
-      clicked.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-      clicked.classList.add('active');
+      clicked.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('selected'));
+      clicked.classList.add('selected');
     }
   </script>
 </body>
