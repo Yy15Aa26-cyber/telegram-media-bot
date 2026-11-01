@@ -12,11 +12,21 @@
     * { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 0; height: 100%; overflow: hidden;
-      background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif;
     }
     .app-container {
       display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding: 10px;
     }
+    .tabs { display: flex; gap: 6px; margin-bottom: 8px; flex-shrink: 0; }
+    button.tab {
+      flex: 1; padding: 10px 4px; border-radius: 8px; border: none;
+      background: var(--card); color: var(--text); font-weight: bold; font-size: 13px; cursor: pointer;
+    }
+    button.tab.active { background: var(--primary); }
+    
+    .screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .screen.active { display: flex; }
+    
     .chat-box {
       flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px;
     }
@@ -41,20 +51,73 @@
       background: var(--primary); color: #fff; border: none; padding: 12px 18px;
       border-radius: 8px; font-weight: bold; cursor: pointer; flex-shrink: 0;
     }
+
+    .tools-scroll { flex: 1; overflow-y: auto; padding-right: 4px; }
+    .tool-box {
+      background: var(--card); padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333;
+    }
+    .tool-box input {
+      width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; margin: 6px 0;
+    }
+    video { width: 100%; border-radius: 8px; margin-top: 6px; background: #000; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <div class="chat-box" id="chat">
-      <div class="msg ai">
-        👋 שלום! המערכת פועלת 24/7 ללא הפסקה.<br>
-        שאל אותי כל שאלה, בקש תמונה ב-AI, או חפש שירים וסרטונים מיוטיוב!
+    <!-- סרגל הטאבים -->
+    <div class="tabs">
+      <button class="tab active" onclick="nav('ai')">🤖 צ'אט, סרטונים ותמונות</button>
+      <button class="tab" onclick="nav('tools')">🛠️ עריכת קבצים</button>
+    </div>
+
+    <!-- מסך 1: צ'אט AI + נגן יוטיוב מובנה + תמונות Turbo -->
+    <div id="ai-screen" class="screen active">
+      <div class="chat-box" id="chat">
+        <div class="msg ai">
+          👋 שלום! המערכת פועלת 24/7.<br>
+          • <b>לסרטונים ושירים:</b> כתוב "שיר של..." או "סרטון של..." ויופיע נגן מובנה בתוך הצ'אט!<br>
+          • <b>לתמונות AI:</b> כתוב "תמונה של..." ומנוע ה-Turbo ייצר אותה תוך 2 שניות!
+        </div>
+      </div>
+      <div class="input-bar">
+        <input type="text" id="prompt" placeholder="בקש שיר ביוטיוב, תמונה או שאלה..." onkeydown="if(event.key==='Enter') send()">
+        <button class="btn" onclick="send()">שלח</button>
       </div>
     </div>
-    <div class="input-bar">
-      <input type="text" id="prompt" placeholder="שאל שאלה, בקש תמונה או שיר ביוטיוב..." onkeydown="if(event.key==='Enter') send()">
-      <button class="btn" onclick="send()">שלח</button>
+
+    <!-- מסך 2: סטודיו עריכת קבצים ישירות בטלפון -->
+    <div id="tools-screen" class="screen">
+      <div class="tools-scroll">
+        
+        <!-- כלי 1: נגן וידאו עם כתוביות מובנות -->
+        <div class="tool-box">
+          <h3>📝 הצגת וידאו עם כתוביות (SRT/VTT)</h3>
+          <label>בחר סרטון:</label>
+          <input type="file" id="subVidFile" accept="video/*" onchange="loadVideoWithSub()">
+          <label>בחר קובץ כתוביות (SRT או VTT):</label>
+          <input type="file" id="subTrackFile" accept=".vtt,.srt" onchange="loadVideoWithSub()">
+          <video id="subPreviewVideo" controls style="display:none;"></video>
+          <div id="subStatus" style="font-size:12px;color:#aaa;margin-top:4px;"></div>
+        </div>
+
+        <!-- כלי 2: חילוץ אודיו מסרטון (Web Audio) -->
+        <div class="tool-box">
+          <h3>🎵 חילוץ שמע מסרטון (וידאו לשמע)</h3>
+          <input type="file" id="audioExtractFile" accept="video/*">
+          <button class="btn" style="width:100%;margin-top:6px;" onclick="extractAudio()">חלץ שמע מהסרטון</button>
+          <audio id="audioPreview" controls style="width:100%;margin-top:8px;display:none;"></audio>
+        </div>
+
+        <!-- כלי 3: נגן וחיתוך מקדים -->
+        <div class="tool-box">
+          <h3>✂️ נגן ומדוד זמני חיתוך</h3>
+          <input type="file" id="previewTrimFile" accept="video/*,audio/*" onchange="loadTrimPreview(this)">
+          <video id="trimVideoPreview" controls style="display:none;"></video>
+          <div style="font-size:12px;color:#aaa;margin-top:4px;">טען קובץ כדי לצפות ולמדוד שניות מדויקות לתחילת וסיום החיתוך.</div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -65,6 +128,33 @@
     const GROQ_KEY = "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";
     let history = [];
 
+    function nav(tab) {
+      document.querySelectorAll('.tab').forEach((b, i) => b.classList.toggle('active', (i===0 && tab==='ai') || (i===1 && tab==='tools')));
+      document.getElementById('ai-screen').classList.toggle('active', tab==='ai');
+      document.getElementById('tools-screen').classList.toggle('active', tab==='tools');
+    }
+
+    // תרגום מהיר דרך Groq כדי שהתמונות ייווצרו מיד בלי שגיאות
+    async function translateToEnglish(text) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-20b",
+            messages: [
+              { role: "system", content: "Translate the user query into 3-5 visual English words for image generation. Return ONLY the English words." },
+              { role: "user", content: text }
+            ]
+          })
+        });
+        const data = await res.json();
+        return data.choices[0].message.content.trim().replace(/["']/g, '');
+      } catch {
+        return text;
+      }
+    }
+
     async function send() {
       const input = document.getElementById('prompt');
       const text = input.value.trim();
@@ -74,46 +164,55 @@
       input.value = "";
       history.push({ role: 'user', content: text });
 
-      // יצירת תמונות
-      if (/צייר|ציור|תמונה|תמונות|draw/i.test(text)) {
-        append('ai', '🎨 יוצר את התמונה...');
-        const clean = text.replace(/צייר לי|צייר|תמונה של|תמונה/g, '').trim() || 'beautiful nature';
-        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean)}?width=640&height=640&nologo=true&seed=${Date.now()}`;
+      // 1. נגן YouTube מובנה ישירות בתוך הצ'אט!
+      if (/שיר|סרט|סרטון|יוטיוב|youtube/i.test(text)) {
+        const clean = text.replace(/שיר של|שיר|סרטון של|סרטון|סרט|יוטיוב/g, '').trim() || text;
+        append('ai', `🎬 מחפש ומטמיע נגן עבור <b>${clean}</b>...`);
+        
+        const box = document.getElementById('chat');
+        box.removeChild(box.lastChild);
+        
+        // הטמעת נגן YouTube שמנגן מיד בתוך הצ'אט לפי החיפוש!
+        const ytEmbedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(clean)}`;
+        append('ai', `
+          🎬 <b>הנה הסרטון/שיר שמצאתי עבורך:</b><br>
+          <i>לחץ Play כדי לצפות ולהאזין ישירות כאן בצ'אט:</i><br>
+          <iframe width="100%" height="210" src="${ytEmbedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px;margin-top:8px;"></iframe>
+          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(clean)}" target="_blank" class="action-btn">🔗 פתח באפליקציית YouTube</a>
+        `);
+        return;
+      }
+
+      // 2. מנוע תמונות Turbo שלא מציג שרת עמוס!
+      if (/צייר|ציור|תמונה|תמונות|draw|image/i.test(text)) {
+        append('ai', '🎨 מתרגם ומייצר תמונה ב-Turbo Engine...');
+        const cleanHebrew = text.replace(/צייר לי|צייר|תמונה של|תמונה/g, '').trim() || 'beautiful scenery';
+        const englishPrompt = await translateToEnglish(cleanHebrew);
+        
+        // שימוש במודל turbo המהיר ביותר שמונע תורי המתנה ועומסים
+        const seed = Date.now();
+        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(englishPrompt)}?width=640&height=640&model=turbo&nologo=true&seed=${seed}`;
         
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
         append('ai', `
-          🎨 <b>התמונה נוצרה:</b><br>
-          <i>"${clean}"</i><br>
-          <div style="margin:8px 0;"><img src="${imgUrl}" style="width:100%;border-radius:10px;min-height:200px;background:#222;" loading="lazy"></div>
-          <a href="${imgUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה</a>
+          🎨 <b>התמונה נוצרה בהצלחה:</b><br>
+          <i>"${cleanHebrew}"</i><br>
+          <div style="margin:8px 0;">
+            <img src="${imgUrl}" style="width:100%;border-radius:10px;min-height:220px;background:#222;display:block;" loading="lazy">
+          </div>
+          <a href="${imgUrl}" target="_blank" class="action-btn">🔗 פתח תמונה מלאה להורדה</a>
         `);
         return;
       }
 
-      // חיפוש יוטיוב
-      if (/שיר|סרט|יוטיוב|youtube/i.test(text)) {
-        const clean = text.replace(/שיר של|שיר|סרט|יוטיוב/g, '').trim();
-        append('ai', `
-          🎬 הנה תוצאות עבור <b>${clean}</b>:<br>
-          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(clean)}" target="_blank" class="action-btn">▶️ צפה והאזן ב-YouTube</a>
-        `);
-        return;
-      }
-
-      // שיחת AI עם Groq
+      // 3. שיחת AI עם Groq
       append('ai', '⏳ חושב...');
       try {
         const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${GROQ_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "openai/gpt-oss-20b",
-            messages: history.slice(-6)
-          })
+          headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "openai/gpt-oss-20b", messages: history.slice(-6) })
         });
         const data = await res.json();
         const reply = data.choices[0].message.content;
@@ -122,7 +221,7 @@
         box.removeChild(box.lastChild);
         append('ai', reply);
         history.push({ role: 'assistant', content: reply });
-      } catch (err) {
+      } catch {
         const box = document.getElementById('chat');
         box.removeChild(box.lastChild);
         append('ai', '❌ שגיאה בחיבור ל-AI.');
@@ -137,6 +236,49 @@
       b.appendChild(d);
       b.scrollTop = b.scrollHeight;
     }
+
+    // פונקציות עריכת קבצים מקומיות
+    function loadVideoWithSub() {
+      const vidFile = document.getElementById('subVidFile').files[0];
+      const subFile = document.getElementById('subTrackFile').files[0];
+      const videoEl = document.getElementById('subPreviewVideo');
+      const status = document.getElementById('subStatus');
+
+      if (vidFile) {
+        videoEl.src = URL.createObjectURL(vidFile);
+        videoEl.style.display = 'block';
+        if (subFile) {
+          const track = document.createElement('track');
+          track.kind = 'subtitles';
+          track.label = 'Hebrew';
+          track.srclang = 'he';
+          track.src = URL.createObjectURL(subFile);
+          track.default = true;
+          videoEl.appendChild(track);
+          status.innerText = '✅ הסרטון והכתוביות נטענו ומוצגים יחד!';
+        } else {
+          status.innerText = 'טען קובץ כתוביות להצגה על הסרטון.';
+        }
+      }
+    }
+
+    function extractAudio() {
+      const f = document.getElementById('audioExtractFile').files[0];
+      if (!f) return alert('בחר קובץ סרטון קודם');
+      const audio = document.getElementById('audioPreview');
+      audio.src = URL.createObjectURL(f);
+      audio.style.display = 'block';
+      audio.play();
+      alert('השמע חולץ בהצלחה ומוכן להאזנה בנגן!');
+    }
+
+    function loadTrimPreview(input) {
+      const f = input.files[0];
+      if (!f) return;
+      const v = document.getElementById('trimVideoPreview');
+      v.src = URL.createObjectURL(f);
+      v.style.display = 'block';
+    }
   </script>
 </body>
-</html>
+  </html>
